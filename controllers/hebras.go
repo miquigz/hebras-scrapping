@@ -2,22 +2,21 @@ package controllers
 
 import (
 	"encoding/json"
+	"hebras-scrapping/constants"
 	"hebras-scrapping/services"
 	"net/http"
 )
 
 func GetScrapeHebras(w http.ResponseWriter, r *http.Request) {
-	//w.Header().Set("Context-Type", "application/x-www-form-urlencoded")
-	//w.Header().Set("Access-Control-Allow-Origin", "*")
-	//w.Header().Set("Access-Control-Allow-Methods", "GET")
+	URLS := []string{constants.TEA_BLENDS_URL}
 
-	scrapeHebras := services.ScrapeHebras(true)
+	scrapeHebras := services.ScrapeHebras(URLS)
 	if len(scrapeHebras) > 0 {
 		w.WriteHeader(http.StatusOK)
-		hebrasResponse, e := json.Marshal(scrapeHebras)
-		if e != nil {
+		hebrasResponse, err := json.Marshal(scrapeHebras)
+		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(`{"message": "Error interno del servidor"}` + e.Error()))
+			w.Write([]byte(`{"message": "Error interno del servidor"}` + err.Error()))
 		}
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(hebrasResponse)
