@@ -18,7 +18,7 @@ func NewHebrasController() *HebrasController {
 }
 
 func (hc *HebrasController) GetScrapeHebras(w http.ResponseWriter, r *http.Request) {
-	URLS := []string{constants.TEA_BLENDS_URL}
+	URLS := []string{constants.TEA_BLENDS_URL, constants.TEA_CONNECTION_URL}
 
 	scrapeHebras := hc.service.ScrapeHebras(URLS)
 	if len(scrapeHebras) > 0 {
