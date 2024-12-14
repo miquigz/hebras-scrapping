@@ -7,10 +7,20 @@ import (
 	"net/http"
 )
 
-func GetScrapeHebras(w http.ResponseWriter, r *http.Request) {
+type HebrasController struct {
+	service *services.HebrasService
+}
+
+func NewHebrasController() *HebrasController {
+	return &HebrasController{
+		service: services.NewHebrasService(),
+	}
+}
+
+func (hc *HebrasController) GetScrapeHebras(w http.ResponseWriter, r *http.Request) {
 	URLS := []string{constants.TEA_BLENDS_URL}
 
-	scrapeHebras := services.ScrapeHebras(URLS)
+	scrapeHebras := hc.service.ScrapeHebras(URLS)
 	if len(scrapeHebras) > 0 {
 		w.WriteHeader(http.StatusOK)
 		hebrasResponse, err := json.Marshal(scrapeHebras)

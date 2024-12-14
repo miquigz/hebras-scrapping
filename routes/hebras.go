@@ -6,8 +6,11 @@ import (
 )
 
 func Router() *mux.Router {
+	hebrasController := controllers.NewHebrasController()
+
 	r := mux.NewRouter()
-	r.HandleFunc("/scrape/hebras", controllers.GetScrapeHebras).Methods("GET")
+	const version1 = "/api/1"
+	r.HandleFunc(version1+"/scrape/hebras", hebrasController.GetScrapeHebras).Methods("GET")
 
 	return r
 }

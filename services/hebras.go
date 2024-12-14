@@ -1,25 +1,33 @@
 package services
 
 import (
-	"fmt"
 	"github.com/gocolly/colly"
+	"google.golang.org/appengine/log"
 	"hebras-scrapping/constants"
 	"hebras-scrapping/models"
-	"strconv"
-	"strings"
 	"sync"
 )
 
-func ScrapeHebras(teaBlendsUrls []string) (teaHebras []models.HebrasTea) {
+type HebrasService struct {
+	Utils *HebrasUtils
+}
+
+func NewHebrasService() *HebrasService {
+	return &HebrasService{
+		Utils: NewHebrasUtils(),
+	}
+}
+
+func (hs *HebrasService) ScrapeHebras(urls []string) (teaHebras []models.HebrasTea) {
 	var wg sync.WaitGroup
 	var mutex = &sync.Mutex{}
 
-	for _, url := range teaBlendsUrls {
+	for _, url := range urls {
 		wg.Add(1)
 		go func(url string) {
 			defer wg.Done()
 			c := colly.NewCollector()
-			scrapeTeaBlends(&teaHebras, c, mutex)
+			hs.scrapeTeaBlends(&teaHebras, c, mutex)
 			c.OnRequest(func(r *colly.Request) {
 				r.Headers.Set("User-Agent", constants.USER_AGENT)
 			})
@@ -30,18 +38,14 @@ func ScrapeHebras(teaBlendsUrls []string) (teaHebras []models.HebrasTea) {
 	}
 
 	wg.Wait()
-	//go func() {
-	//	//TODO: Investigar diferencia entre poner en una goroutine y no ponerlo en goroutine embembido el wgWait
-	//	wg.Wait()
-	//}()
 
 	return teaHebras
 }
 
 // ----------------------------HELPERS--------------------------------
 
-// *esto mismo para el link: teablendsforyou.com.ar
-func scrapeTeaBlends(teaHebras *[]models.HebrasTea, c *colly.Collector, mutex *sync.Mutex) {
+// scrapeTeaBlends Realiza el scrapeo en la pagina de TeaBlends
+func (hs *HebrasService) scrapeTeaBlends(teaHebras *[]models.HebrasTea, c *colly.Collector, mutex *sync.Mutex) {
 	c.OnHTML("li[data-hook=product-list-grid-item]", func(e *colly.HTMLElement) {
 		tea := new(models.HebrasTea)
 		aContainer := e.DOM.Nodes[0].FirstChild.FirstChild.FirstChild
@@ -62,9 +66,9 @@ func scrapeTeaBlends(teaHebras *[]models.HebrasTea, c *colly.Collector, mutex *s
 		}
 
 		if tea.Price != "" {
-			rawPrice, err := formatTeaBlendPrice(tea.Price)
+			rawPrice, err := hs.Utils.FormatTeaBlendPrice(tea.Price)
 			if err != nil {
-				fmt.Print("Error al parsear precio: ", err.Error())
+				log.Infof(nil, "Error al parsear precio: %v", err.Error())
 				return
 			}
 			tea.RawPrice = rawPrice
@@ -77,22 +81,4 @@ func scrapeTeaBlends(teaHebras *[]models.HebrasTea, c *colly.Collector, mutex *s
 			mutex.Unlock()
 		}
 	})
-}
-
-//TODO: MAs urls, fijarme imgs tema
-//func scrape
-
-// Example input: "Desde $8.500,00"
-func formatTeaBlendPrice(text string) (int, error) {
-	text = strings.Split(text, ",")[0] //Omito decimales
-	text = strings.ReplaceAll(text, "Desde", "")
-	text = strings.ReplaceAll(text, "$", "")
-	text = strings.ReplaceAll(text, " ", "") //Remuevo espacios
-	text = strings.ReplaceAll(text, ".", "") //Remuevo puntos
-
-	price, err := strconv.Atoi(text)
-	if err != nil {
-		return 0, err
-	}
-	return price, nil
 }
