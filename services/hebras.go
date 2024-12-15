@@ -1,21 +1,28 @@
 package services
 
 import (
+	"encoding/json"
+	"fmt"
+	"github.com/go-redis/redis/v8"
 	"github.com/gocolly/colly"
 	"google.golang.org/appengine/log"
 	"hebras-scrapping/constants"
+	"hebras-scrapping/db"
 	"hebras-scrapping/models"
 	"strings"
 	"sync"
+	"time"
 )
 
 type HebrasService struct {
 	Utils *HebrasUtils
+	Redis *redis.Client
 }
 
 func NewHebrasService() *HebrasService {
 	return &HebrasService{
 		Utils: NewHebrasUtils(),
+		Redis: db.NewRedisClient(),
 	}
 }
 
@@ -27,6 +34,18 @@ func (hs *HebrasService) ScrapeHebras(urls []string) (teaHebras []models.HebrasT
 		wg.Add(1)
 		go func(url string) {
 			defer wg.Done()
+
+			cacheKey := "scrape:" + url
+			cachedData, err := db.GetCache(hs.Redis, cacheKey)
+			if err == nil && cachedData != "" {
+				var cachedTeaHebras []models.HebrasTea
+				json.Unmarshal([]byte(cachedData), &cachedTeaHebras)
+				mutex.Lock()
+				teaHebras = append(teaHebras, cachedTeaHebras...)
+				mutex.Unlock()
+				return
+			}
+
 			c := colly.NewCollector()
 			if url == constants.TEA_BLENDS_URL {
 				hs.scrapeTeaBlends(&teaHebras, c, mutex)
@@ -39,8 +58,13 @@ func (hs *HebrasService) ScrapeHebras(urls []string) (teaHebras []models.HebrasT
 			})
 			c.Visit(url)
 			c.Wait() //Este wait va a ser individual para cada gorooutine
-		}(url)
 
+			data, _ := json.Marshal(teaHebras)
+			err = db.SetCache(hs.Redis, cacheKey, string(data), 24*time.Hour)
+			if err != nil {
+				fmt.Println(fmt.Sprintf("Error al guardar en cache: %v", err.Error()))
+			}
+		}(url)
 	}
 
 	wg.Wait()
