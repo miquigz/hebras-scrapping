@@ -4,14 +4,19 @@ import (
 	"context"
 	"errors"
 	"github.com/go-redis/redis/v8"
+	"os"
 	"time"
 )
 
 var ctx = context.Background()
 
 func NewRedisClient() *redis.Client {
+	addr := os.Getenv("REDIS_ADDR")
+	if addr == "" {
+		addr = "localhost:6379"
+	}
 	rdb := redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",
+		Addr: addr,
 	})
 	return rdb
 }
