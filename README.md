@@ -1,11 +1,20 @@
 # hebras-scrapping
 
-Proyecto que realiza Scrapping en P'aginas de t'e en hebras (Argentina), para saber su precio
+Proyecto que realiza Scrapping en Páginas de té en hebras (Argentina), para saber su precio, únicamente para fines educativos/aprendizaje.
 
-Tecnolog`ias utilizadas:
-Gorilla Mux - Go Colly (Scrapping)
+Tecnologías utilizadas:
+
+Gorilla Mux - Go Colly (Scrapping) - Redis - Bruno - Docker
 
 MVC Pattern
+
+# Cómo correr el proyecto
+Requisitos: Docker y docker compose
+
+A nivel del proyecto ejecutar:
+```bash
+$ docker-compose up -d
+```
 
 ### GET /api/1/scrape/hebras
 
@@ -46,3 +55,14 @@ Response example:
   }
 ]
 ```
+
+## Usos
+``Bruno:`` Utilizado como una alternativa open-source a Postman para probar y documentar las APIs de la aplicación.
+
+``Gorilla Mux:`` Utilizado para manejar las rutas HTTP.
+
+``Redis:`` Utilizado como sistema de caché para almacenar temporalmente los datos obtenidos del scrapping
+
+``Docker:`` Utilizado para contenerizar la aplicación y sus dependencias
+
+``Go Colly:`` Para realizar el scrapping de las paginas web, es simple y robusta.
