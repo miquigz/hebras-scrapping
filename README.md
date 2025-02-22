@@ -68,3 +68,13 @@ Response example:
 ``Go Colly:`` Libreria para realizar el scrapping de las paginas web, es simple y robusta.
 
 ``Hugo:`` Libreria para generar webs estáticas mediante el uso de plantillas en Go
+
+``NATS:`` Para enviar mensajes al wsHandler y emitir mensajes en ws://{{PATH}}/tea/messages
+
+
+## NOTA:
+Bruno no posee soporte para webSockets, por ende se recomienda probar con **wscat** desde terminal,
+`e.g:`
+```shell
+    npx wscat -c ws://localhost:8080/tea/messages 
+```

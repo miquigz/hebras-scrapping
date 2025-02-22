@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/go-redis/redis/v8"
 	"github.com/gocolly/colly"
+	"github.com/nats-io/nats.go"
 	"google.golang.org/appengine/log"
 	"hebras-scrapping/constants"
 	"hebras-scrapping/db"
@@ -17,12 +18,19 @@ import (
 type HebrasService struct {
 	Utils *HebrasUtils
 	Redis *redis.Client
+	Nc    *nats.Conn
 }
 
 func NewHebrasService() *HebrasService {
+	nc, err := nats.Connect(nats.DefaultURL)
+	if err != nil {
+		log.Errorf(nil, "Error al conectar a NATS: %v", err)
+	}
+
 	return &HebrasService{
 		Utils: NewHebrasUtils(),
 		Redis: db.NewRedisClient(),
+		Nc:    nc,
 	}
 }
 
@@ -73,8 +81,14 @@ func (hs *HebrasService) ScrapeHebras(urls []string) (teaHebras []models.HebrasT
 				}()
 				err := hs.Utils.SaveDataToFile(teaHebras)
 				if err != nil {
-					log.Errorf(nil, "Error al guardar en archivo: %v", err.Error())
+					log.Errorf(nil, "Error al guardar teas.json: %v", err.Error())
 				}
+
+				err = hs.Nc.Publish("scrape.hebras", []byte("Scrapping completed"))
+				if err != nil {
+					log.Errorf(nil, "Error al publicar msj: %v", err.Error())
+				}
+
 			}()
 
 		}(url)

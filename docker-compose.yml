@@ -5,6 +5,7 @@ services:
       - "8080:8080"
     depends_on:
       - redis
+      - nats
     environment:
       - REDIS_ADDR=redis:6379
       - NATS_URL=nats://nats:4222
