@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/go-redis/redis/v8"
@@ -24,7 +25,7 @@ type HebrasService struct {
 func NewHebrasService() *HebrasService {
 	nc, err := nats.Connect(nats.DefaultURL)
 	if err != nil {
-		log.Errorf(nil, "Error al conectar a NATS: %v", err)
+		fmt.Println(fmt.Sprintf("Error al conectar a NATS: %v", err.Error()))
 	}
 
 	return &HebrasService{
@@ -81,14 +82,14 @@ func (hs *HebrasService) ScrapeHebras(urls []string) (teaHebras []models.HebrasT
 				}()
 				err := hs.Utils.SaveDataToFile(teaHebras)
 				if err != nil {
-					log.Errorf(nil, "Error al guardar teas.json: %v", err.Error())
+					log.Errorf(context.Background(), "Error al guardar teas.json: %v", err.Error())
 				}
-
-				err = hs.Nc.Publish("scrape.hebras", []byte("Scrapping completed"))
-				if err != nil {
-					log.Errorf(nil, "Error al publicar msj: %v", err.Error())
+				if hs.Nc != nil {
+					err = hs.Nc.Publish("scrape.hebras", []byte("Scrapping completed"))
+					if err != nil {
+						log.Errorf(context.Background(), "Error al publicar msj: %v", err.Error())
+					}
 				}
-
 			}()
 
 		}(url)
