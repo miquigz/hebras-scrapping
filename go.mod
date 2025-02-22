@@ -7,6 +7,7 @@ require github.com/gorilla/mux v1.8.0
 require (
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/gocolly/colly v1.2.0
+	github.com/gorilla/websocket v1.5.3
 	google.golang.org/appengine v1.6.7
 )
 
