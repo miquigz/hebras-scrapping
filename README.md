@@ -61,8 +61,10 @@ Response example:
 
 ``Gorilla Mux:`` Utilizado para manejar las rutas HTTP.
 
-``Redis:`` Utilizado como sistema de caché para almacenar temporalmente los datos obtenidos del scrapping
+``Redis:`` Utilizado como sistema de caché para almacenar temporalmente los datos obtenidos del scrapping, a fin de hacer un scrapping respetuoso.
 
 ``Docker:`` Utilizado para contenerizar la aplicación y sus dependencias
 
-``Go Colly:`` Para realizar el scrapping de las paginas web, es simple y robusta.
+``Go Colly:`` Libreria para realizar el scrapping de las paginas web, es simple y robusta.
+
+``Hugo:`` Libreria para generar webs estáticas mediante el uso de plantillas en Go

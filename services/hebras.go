@@ -64,6 +64,19 @@ func (hs *HebrasService) ScrapeHebras(urls []string) (teaHebras []models.HebrasT
 			if err != nil {
 				fmt.Println(fmt.Sprintf("Error al guardar en cache: %v", err.Error()))
 			}
+
+			go func() {
+				defer func() {
+					if r := recover(); r != nil {
+						log.Infof(nil, "Panic in goroutine: SaveDataToFile(), %v", r)
+					}
+				}()
+				err := hs.Utils.SaveDataToFile(teaHebras)
+				if err != nil {
+					log.Errorf(nil, "Error al guardar en archivo: %v", err.Error())
+				}
+			}()
+
 		}(url)
 	}
 

@@ -1,6 +1,9 @@
 package services
 
 import (
+	"encoding/json"
+	"hebras-scrapping/models"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -34,4 +37,20 @@ func (hu *HebrasUtils) FormatTeaBlendPrice(text string) (int, error) {
 		return 0, err
 	}
 	return price, nil
+}
+
+// SaveDataToFile recibe un slice de HebrasTea y lo guarda en un archivo JSON en la carpeta hugo/data
+func (hu *HebrasUtils) SaveDataToFile(teaHebras []models.HebrasTea) error {
+	data := map[string][]models.HebrasTea{
+		"teas": teaHebras,
+	}
+	file, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		return err
+	}
+	err = os.WriteFile("hugo/data/teas.json", file, 0644)
+	if err != nil {
+		return err
+	}
+	return nil
 }
