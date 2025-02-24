@@ -5,8 +5,10 @@ services:
       - "8080:8080"
     depends_on:
       - redis
+      - nats
     environment:
       - REDIS_ADDR=redis:6379
+      - NATS_URL=nats://nats:4222
 
   redis:
     image: redis:latest
@@ -14,6 +16,19 @@ services:
       - "6379:6379"
     volumes:
       - redis-data:/data
+
+  nats:
+    image: nats:latest
+    ports:
+      - "4222:4222"
+
+  hugo:
+    image: klakegg/hugo:ext-alpine
+    volumes:
+      - ./hugo:/src
+    ports:
+      - "1313:1313"
+    command: server --bind 0.0.0.0
 
 volumes:
   redis-data:

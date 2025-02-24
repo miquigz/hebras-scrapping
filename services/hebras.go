@@ -1,10 +1,12 @@
 package services
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/go-redis/redis/v8"
 	"github.com/gocolly/colly"
+	"github.com/nats-io/nats.go"
 	"google.golang.org/appengine/log"
 	"hebras-scrapping/constants"
 	"hebras-scrapping/db"
@@ -17,12 +19,19 @@ import (
 type HebrasService struct {
 	Utils *HebrasUtils
 	Redis *redis.Client
+	Nc    *nats.Conn
 }
 
 func NewHebrasService() *HebrasService {
+	nc, err := nats.Connect(nats.DefaultURL)
+	if err != nil {
+		fmt.Println(fmt.Sprintf("Error al conectar a NATS: %v", err.Error()))
+	}
+
 	return &HebrasService{
 		Utils: NewHebrasUtils(),
 		Redis: db.NewRedisClient(),
+		Nc:    nc,
 	}
 }
 
@@ -64,6 +73,25 @@ func (hs *HebrasService) ScrapeHebras(urls []string) (teaHebras []models.HebrasT
 			if err != nil {
 				fmt.Println(fmt.Sprintf("Error al guardar en cache: %v", err.Error()))
 			}
+
+			go func() {
+				defer func() {
+					if r := recover(); r != nil {
+						log.Infof(nil, "Panic in goroutine: SaveDataToFile(), %v", r)
+					}
+				}()
+				err := hs.Utils.SaveDataToFile(teaHebras)
+				if err != nil {
+					log.Errorf(context.Background(), "Error al guardar teas.json: %v", err.Error())
+				}
+				if hs.Nc != nil {
+					err = hs.Nc.Publish("scrape.hebras", []byte("Scrapping completed"))
+					if err != nil {
+						log.Errorf(context.Background(), "Error al publicar msj: %v", err.Error())
+					}
+				}
+			}()
+
 		}(url)
 	}
 
